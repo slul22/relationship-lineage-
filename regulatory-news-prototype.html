@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulatory Intelligence – Full Feature Prototype</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; color: #1a1a1a; background: #fff; }
+
+/* ─── Topbar ─────────────────────────────────────────────── */
+.topbar {
+  background: #fff; border-bottom: 1px solid #e0e0e0;
+  padding: 0 24px; display: flex; align-items: center; height: 52px; gap: 0;
+  position: sticky; top: 0; z-index: 300;
+}
+.brand { display: flex; align-items: center; gap: 0; margin-right: 0; }
+.logo-wrap { display: flex; align-items: center; gap: 8px; padding-right: 16px; }
+.logo-ring { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #cc0000; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.logo-ring svg { width: 22px; height: 22px; }
+.logo-solutions { font-size: 13px; font-weight: 700; color: #333; }
+.brand-sep { width: 1px; height: 28px; background: #d0d0d0; margin: 0 16px; }
+.brand-ri { font-size: 14px; font-weight: 700; color: #cc0000; margin-right: 32px; }
+.topbar nav a { text-decoration: none; color: #444; font-size: 13px; padding: 0 14px; height: 52px; display: inline-flex; align-items: center; border-bottom: 3px solid transparent; font-weight: 500; }
+.topbar nav a:hover { color: #cc0000; }
+.topbar nav a.active { color: #111; border-bottom-color: #cc0000; font-weight: 700; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.user-pill { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #444; cursor: pointer; padding: 5px 10px; border: 1px solid #e5e7eb; border-radius: 20px; }
+.user-avatar-sm { width: 26px; height: 26px; border-radius: 50%; background: #9ca3af; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: #555; background: #fff; position: relative; }
+.notif-dot { position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; background: #cc0000; border-radius: 50%; border: 1px solid #fff; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: #cc0000; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* ─── Prototype switcher ─────────────────────────────────── */
+.proto-nav { background: #1e1e2e; padding: 10px 28px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.proto-nav .pn-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.6px; margin-right: 6px; }
+.pn-btn { padding: 5px 13px; border-radius: 4px; border: 1px solid #444; cursor: pointer; font-size: 12px; color: #bbb; background: transparent; }
+.pn-btn:hover { border-color: #888; color: #fff; }
+.pn-btn.active { background: #cc0000; border-color: #cc0000; color: #fff; }
+
+/* ─── Common badges/tags ─────────────────────────────────── */
+.badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; border: 1px solid; display: inline-block; letter-spacing: 0.2px; white-space: nowrap; }
+.b-latest   { background: #dcfce7; color: #166534; border-color: #86efac; }
+.b-draft    { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
+.b-final    { background: #e0f2fe; color: #075985; border-color: #7dd3fc; }
+.b-ver      { background: #f5f0ff; color: #6d28d9; border-color: #ddd6fe; }
+.b-newsid   { background: #f9fafb; color: #6b7280; border-color: #e5e7eb; font-weight: 500; }
+.b-revised  { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.b-superseded { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.b-changed  { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.b-same     { background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; }
+.b-added    { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+
+/* ─── SHARED: page shell ─────────────────────────────────── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ─── News header ─────────────────────────────────────────── */
+.news-header { padding: 16px 28px 14px; border-bottom: 1px solid #e0e0e0; background: #f7f7f7; }
+.news-id-row { font-size: 12px; font-weight: 700; color: #cc0000; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.news-title-row { display: flex; align-items: flex-start; gap: 0; }
+.news-title { font-size: 19px; font-weight: 700; line-height: 1.4; color: #111; flex: 1; }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-left: 20px; margin-left: 16px; border-left: 1px solid #d0d0d0; align-self: stretch; padding-top: 2px; }
+.btn { padding: 7px 18px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+.btn-primary { background: #1a56db; color: #fff; }
+.btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-bookmark { width: 34px; height: 34px; border: 1px solid #d0d0d0; border-radius: 4px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; }
+.ver-selector { display: inline-flex; align-items: center; gap: 5px; background: #fff; border: 1px solid #c7c7c7; border-radius: 4px; padding: 3px 10px; font-size: 12px; color: #374151; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.ver-selector:hover { background: #f9fafb; border-color: #9ca3af; }
+.older-banner { padding: 8px 28px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; align-items: center; gap: 10px; font-size: 12px; color: #1e3a8a; }
+.older-banner a { color: #1d4ed8; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.older-banner .ob-btn { margin-left: auto; flex-shrink: 0; background: #1d4ed8; color: #fff; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+.meta-row { margin-top: 12px; font-size: 12px; color: #555; display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+.meta-item { display: flex; align-items: center; gap: 4px; }
+.meta-item .ml { color: #555; }
+.meta-item .mv { color: #111; font-weight: 600; }
+.meta-item.highlight .mv { color: #b45309; font-weight: 600; }
+.meta-sep { color: #ccc; margin: 0 10px; }
+.comments-link { margin-left: auto; font-size: 12px; color: #374151; display: flex; align-items: center; gap: 5px; text-decoration: none; cursor: pointer; }
+.comments-count { background: #1a56db; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 700; color: #fff; }
+
+/* ─── Body layout ─────────────────────────────────────────── */
+.body-layout { display: flex; align-items: flex-start; }
+.sidebar { width: 268px; flex-shrink: 0; border-right: 1px solid #e8e8e8; padding: 18px 18px 40px; position: sticky; top: 52px; max-height: calc(100vh - 52px); overflow-y: auto; }
+.back-link { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #cc0000; text-decoration: none; font-weight: 500; margin-bottom: 16px; }
+.sidebar hr { border: none; border-top: 1px solid #e8e8e8; margin: 12px 0; }
+.sb-label { font-size: 13px; font-weight: 600; color: #222; margin-bottom: 7px; }
+.sb-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #d1d5db; border-radius: 20px; padding: 4px 11px; font-size: 12px; color: #374151; margin: 2px 2px 2px 0; background: #fff; }
+.sb-chip.block { border-radius: 6px; display: block; margin-bottom: 4px; line-height: 1.5; }
+.sb-chip.blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+/* Sidebar version history */
+.v-list { display: flex; flex-direction: column; }
+.v-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 12px; cursor: pointer; }
+.v-row:last-child { border-bottom: none; }
+.v-row:hover .v-lbl { color: #cc0000; }
+.v-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.v-lbl { flex: 1; color: #6b7280; line-height: 1.3; }
+.v-lbl.cur { font-weight: 700; color: #166534; }
+.v-date { font-size: 10px; color: #bbb; white-space: nowrap; }
+
+/* main content */
+.main-content { flex: 1; min-width: 0; }
+
+/* ─── Banners ─────────────────────────────────────────────── */
+.wc-banner { padding: 7px 28px; background: #fafafa; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.wc-title { font-size: 12px; font-weight: 500; color: #6b7280; white-space: nowrap; }
+.wc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wc-chip { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; cursor: pointer; border: 1px solid #e5e7eb; background: #fff; color: #374151; transition: background 0.15s; white-space: nowrap; }
+.wc-chip:hover { background: #f3f4f6; border-color: #d1d5db; }
+.wc-chip.meta { border-color: #e5e7eb; color: #374151; }
+.wc-chip.meta:hover { background: #f3f4f6; }
+
+.inactive-banner { padding: 8px 28px; background: #fef2f2; border-bottom: 1px solid #fecaca; display: flex; align-items: center; gap: 10px; }
+.inactive-banner a { color: #991b1b; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.inactive-banner .ib-btn { margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; background: #991b1b; color: #fff; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+
+/* ─── Tabs ─────────────────────────────────────────────────── */
+.tabs-bar { display: flex; border-bottom: 2px solid #e5e7eb; padding: 0 28px; background: #fff; position: sticky; top: 52px; z-index: 10; }
+.tab-btn { padding: 13px 0; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; margin-right: 22px; white-space: nowrap; }
+.tab-btn:hover { color: #374151; }
+.tab-btn.active { color: #cc0000; border-bottom-color: #cc0000; font-weight: 700; }
+.tab-count { background: #e5e7eb; color: #6b7280; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 5px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Content sections ────────────────────────────────────── */
+.content-section { padding: 24px 28px 0; }
+.content-section + .content-section { border-top: 1px solid #e8e8e8; margin-top: 24px; padding-top: 24px; }
+.content-section:last-child { padding-bottom: 40px; }
+.sec-heading { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.updated-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.4px; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.sec-body { font-size: 13px; line-height: 1.8; color: #374151; }
+.sec-body p { margin-bottom: 10px; }
+.sec-body p:last-child { margin-bottom: 0; }
+.sec-body ul { padding-left: 20px; }
+.sec-body ul li { margin-bottom: 7px; }
+.sec-body strong { color: #111; }
+.sec-body a { color: #2563eb; }
+.announce-link { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; color: #2563eb; text-decoration: none; }
+.announce-link::before { content: "•"; color: #9ca3af; margin-right: 2px; }
+.announce-link:hover { text-decoration: underline; }
+.impact-block { display: flex; align-items: flex-start; gap: 12px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 13px 15px; }
+.impact-block .ib-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.impact-block .ib-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 3px; }
+.impact-block .ib-value { font-size: 13px; color: #374151; line-height: 1.7; }
+.impact-block .ib-value.na { color: #9ca3af; font-style: italic; }
+
+/* ─── Relationships & Version History section ─────────────── */
+.rel-section { padding: 28px 28px 36px; background: #fafafa; border-top: 2px solid #e5e7eb; }
+.rel-section-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+.rel-section-subtitle { font-size: 12px; color: #9ca3af; margin-bottom: 24px; }
+
+/* Lineage timeline */
+.lineage-timeline { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 8px; margin-bottom: 28px; }
+.lt-node { display: flex; flex-direction: column; align-items: center; }
+.lt-card {
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+  padding: 10px 13px; min-width: 160px; max-width: 200px; cursor: pointer;
+  transition: box-shadow 0.15s; position: relative;
+}
+.lt-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.lt-card.current { border: 2px solid #166534; }
+.lt-card.superseded-node { opacity: 0.6; border-style: dashed; }
+.lt-card.locked { background: #f9fafb; cursor: default; }
+.lt-card .lt-id { font-size: 10px; color: #9ca3af; margin-bottom: 4px; }
+.lt-card .lt-title { font-size: 11px; font-weight: 600; color: #374151; line-height: 1.4; margin-bottom: 6px; }
+.lt-card .lt-date { font-size: 10px; color: #9ca3af; }
+.lt-card .lt-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.lt-card .lt-current-label { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: #166534; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+/* revision dot on node */
+.lt-card .rev-dot { position: absolute; top: -6px; right: -6px; width: 14px; height: 14px; background: #f59e0b; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #fff; font-weight: 700; }
+/* lock overlay */
+.lt-lock-overlay { position: absolute; inset: 0; border-radius: 7px; background: repeating-linear-gradient(45deg,rgba(200,200,200,0.08),rgba(200,200,200,0.08) 4px,transparent 4px,transparent 8px); display: flex; align-items: center; justify-content: center; }
+.lt-connector { display: flex; align-items: center; padding-top: 36px; }
+.lt-arrow { display: flex; align-items: center; gap: 0; }
+.lt-line-h { width: 36px; height: 2px; background: #e0e0e0; }
+.lt-arrowhead { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid #e0e0e0; }
+.lt-connector-label { font-size: 9px; color: #bbb; text-align: center; margin-top: 3px; white-space: nowrap; }
+
+/* ─── Revision history table ─────────────────────────────── */
+.rh-table { width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+.rh-table th { padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.rh-table td { padding: 12px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; line-height: 1.6; color: #374151; }
+.rh-table tr:last-child td { border-bottom: none; }
+.rh-table td:first-child { white-space: nowrap; font-weight: 600; color: #6b7280; font-size: 11px; }
+.rh-field-changes { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.rh-field-row { display: flex; align-items: baseline; gap: 6px; font-size: 11px; }
+.rh-field-name { font-weight: 700; color: #374151; min-width: 140px; }
+.rh-from { color: #991b1b; text-decoration: line-through; background: #fee2e2; padding: 0 3px; border-radius: 2px; }
+.rh-arrow { color: #9ca3af; }
+.rh-to { color: #166534; background: #dcfce7; padding: 0 3px; border-radius: 2px; font-weight: 500; }
+
+/* ─── Related coverage / refs / consolidations ───────────── */
+.rel-grid { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+.rel-card { flex: 1; min-width: 200px; max-width: 280px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: box-shadow 0.12s; }
+.rel-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.rel-card.locked { background: #f9fafb; cursor: default; }
+.rel-card .rc-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #9ca3af; margin-bottom: 5px; }
+.rel-card .rc-id { font-size: 10px; color: #9ca3af; margin-bottom: 3px; }
+.rel-card .rc-title { font-size: 12px; font-weight: 600; color: #2563eb; line-height: 1.4; margin-bottom: 6px; }
+.rel-card.locked .rc-title { color: #9ca3af; }
+.rel-card .rc-meta { font-size: 11px; color: #9ca3af; }
+.rel-card .rc-redacted { background: repeating-linear-gradient(90deg,#e5e7eb,#e5e7eb 8px,#f3f4f6 8px,#f3f4f6 12px); height: 10px; border-radius: 2px; margin-bottom: 5px; }
+.rel-card .rc-lock-note { font-size: 10px; color: #9ca3af; font-style: italic; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+
+/* Sub-section headings */
+.rel-sub-heading { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 10px; margin-top: 20px; display: flex; align-items: center; gap: 8px; }
+.rel-sub-heading:first-child { margin-top: 0; }
+
+/* ─── Compare tab ─────────────────────────────────────────── */
+.cmp-wrap { padding: 22px 28px 40px; }
+.cmp-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 11px 14px; margin-bottom: 22px; }
+.cmp-controls label { font-size: 12px; color: #6b7280; font-weight: 600; }
+.cmp-controls select { font-size: 12px; padding: 5px 9px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; color: #374151; }
+.cmp-sub-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #9ca3af; margin-bottom: 8px; margin-top: 22px; }
+.cmp-sub-label:first-child { margin-top: 0; }
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.cmp-table th { padding: 8px 13px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; color: #9ca3af; }
+.cmp-table th.ho { background: #fff8f8; color: #991b1b; }
+.cmp-table th.hn { background: #f8fff9; color: #166534; }
+.cmp-table td { padding: 9px 13px; border-bottom: 1px solid #f3f4f6; vertical-align: top; line-height: 1.5; }
+.cmp-table td.tf { font-weight: 600; color: #4b5563; width: 155px; background: #fafafa; font-size: 11px; }
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table tr.rc td.to { background: #fef2f2; color: #991b1b; }
+.cmp-table tr.rc td.tn { background: #f0fdf4; color: #166534; font-weight: 600; }
+.cmp-table tr.rs td.to, .cmp-table tr.rs td.tn { color: #9ca3af; }
+.rt { float: right; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; }
+.rt.c { background: #fef3c7; color: #92400e; }
+.rt.s { background: #f3f4f6; color: #9ca3af; }
+.diff-block { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+.diff-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.diff-head-name { font-size: 13px; font-weight: 600; color: #374151; }
+.diff-body { padding: 13px 15px; }
+.no-change { font-size: 12px; color: #9ca3af; font-style: italic; }
+.diff-cols { display: flex; gap: 13px; }
+.diff-col { flex: 1; min-width: 0; }
+.dcl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 3px; margin-bottom: 7px; display: inline-block; }
+.dcl.o { background: #fee2e2; color: #991b1b; }
+.dcl.n { background: #dcfce7; color: #166534; }
+.diff-text { font-size: 12px; line-height: 1.75; color: #374151; }
+del { text-decoration: line-through; background: #fee2e2; color: #991b1b; padding: 0 2px; border-radius: 2px; }
+ins { text-decoration: none; background: #dcfce7; color: #166534; padding: 0 2px; border-radius: 2px; font-weight: 500; }
+
+/* ─── Previous versions tab ──────────────────────────────── */
+.prev-wrap { padding: 22px 28px 40px; }
+.prev-entry { display: flex; gap: 13px; padding: 16px 0; border-bottom: 1px solid #f3f4f6; }
+.prev-entry:last-child { border-bottom: none; }
+.prev-spine { display: flex; flex-direction: column; align-items: center; padding-top: 3px; }
+.prev-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.prev-line { width: 2px; background: #e5e7eb; flex: 1; min-height: 22px; margin-top: 4px; }
+.prev-entry:last-child .prev-line { display: none; }
+.prev-meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 5px; }
+.prev-title { font-size: 13px; font-weight: 600; color: #374151; line-height: 1.4; margin-bottom: 4px; }
+.prev-dates { font-size: 11px; color: #9ca3af; margin-bottom: 7px; }
+.prev-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.prev-chip { font-size: 11px; font-weight: 400; padding: 3px 9px; border-radius: 4px; border: 1px solid #e5e7eb; color: #6b7280; background: #f9fafb; }
+.prev-chip.m { border-color: #e5e7eb; background: #f9fafb; color: #6b7280; }
+
+/* ─── Cross-article nav breadcrumbs ──────────────────────── */
+.version-nav { padding: 10px 28px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0; font-size: 12px; }
+.vn-item { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 5px; cursor: pointer; color: #374151; border: 1px solid transparent; }
+.vn-item:hover { background: #fff; border-color: #e5e7eb; }
+.vn-item.disabled { color: #d1d5db; cursor: default; }
+.vn-item.disabled:hover { background: transparent; border-color: transparent; }
+.vn-sep { color: #d1d5db; margin: 0 4px; font-size: 16px; }
+.vn-current { flex: 1; text-align: center; font-size: 12px; color: #6b7280; }
+
+/* ════════════════════════════════════════
+   VIEW 2 – SEARCH RESULTS
+═══════════════════════════════════════ */
+.search-page { padding: 20px 28px; max-width: 1100px; margin: 0 auto; }
+.search-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.search-title { font-size: 18px; font-weight: 700; }
+.search-title .count { font-size: 14px; color: #9ca3af; font-weight: 400; }
+.search-input-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.search-input { padding: 7px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 240px; }
+.filter-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-label { font-size: 12px; color: #6b7280; font-weight: 600; }
+.toggle-wrap { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #374151; }
+.toggle { width: 36px; height: 20px; background: #d1d5db; border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+.toggle.on { background: #166534; }
+.toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle.on::after { left: 18px; }
+
+.sort-select { margin-left: auto; font-size: 12px; padding: 5px 9px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+.news-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; transition: box-shadow 0.15s; }
+.news-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+.nc-top { padding: 13px 16px 11px; }
+.nc-meta { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; flex-wrap: wrap; }
+.nc-title { font-size: 14px; font-weight: 600; color: #cc0000; cursor: pointer; line-height: 1.4; margin-bottom: 6px; }
+.nc-title:hover { text-decoration: underline; }
+.nc-body { font-size: 12px; color: #555; line-height: 1.6; margin-bottom: 8px; }
+.nc-dates { font-size: 11px; color: #9ca3af; display: flex; gap: 14px; flex-wrap: wrap; }
+.nc-dates span { display: flex; gap: 3px; }
+.nc-dates .dl { color: #bbb; }
+.nc-sup-strip { background: #fef2f2; border-top: 1px solid #fecaca; padding: 7px 16px; font-size: 11px; color: #991b1b; display: flex; align-items: center; gap: 8px; }
+.nc-sup-strip a { color: #991b1b; font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+/* ════════════════════════════════════════
+   VIEW 3 – NOTIFICATIONS
+═══════════════════════════════════════ */
+.notif-page { padding: 20px 28px; max-width: 760px; }
+.notif-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.notif-header h2 { font-size: 18px; font-weight: 700; }
+.notif-header .mark-all { font-size: 12px; color: #cc0000; cursor: pointer; font-weight: 600; }
+.notif-list { display: flex; flex-direction: column; gap: 0; }
+.notif-item { display: flex; gap: 13px; padding: 14px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+.notif-item:hover { background: #fafafa; margin: 0 -10px; padding-left: 10px; padding-right: 10px; border-radius: 6px; }
+.notif-item:last-child { border-bottom: none; }
+.notif-icon-wrap { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.ni-superseded { background: #fef2f2; }
+.ni-revised    { background: #fff7ed; }
+.ni-minor      { background: #f3f4f6; }
+.notif-body { flex: 1; }
+.notif-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+.notif-type.superseded { color: #991b1b; }
+.notif-type.revised    { color: #c2410c; }
+.notif-type.minor      { color: #9ca3af; }
+.notif-title { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 4px; line-height: 1.4; }
+.notif-desc { font-size: 12px; color: #6b7280; line-height: 1.6; }
+.notif-desc a { color: #cc0000; font-weight: 600; text-decoration: underline; }
+.notif-time { font-size: 11px; color: #bbb; white-space: nowrap; }
+.notif-unread-dot { width: 8px; height: 8px; background: #cc0000; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.notif-muted { font-size: 11px; color: #d1d5db; text-align: center; padding: 14px 0; font-style: italic; }
+
+/* ════════════════════════════════════════
+   VIEW 4 – BOOKMARKS
+═══════════════════════════════════════ */
+.bookmarks-page { padding: 20px 28px; max-width: 860px; }
+.bm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.bm-header h2 { font-size: 18px; font-weight: 700; }
+.bm-list { display: flex; flex-direction: column; gap: 0; }
+.bm-item { display: flex; align-items: flex-start; gap: 13px; padding: 16px 0; border-bottom: 1px solid #f3f4f6; }
+.bm-item:last-child { border-bottom: none; }
+.bm-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.bm-body { flex: 1; min-width: 0; }
+.bm-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 5px; }
+.bm-title { font-size: 13px; font-weight: 600; color: #cc0000; cursor: pointer; line-height: 1.4; margin-bottom: 5px; }
+.bm-title:hover { text-decoration: underline; }
+.bm-dates { font-size: 11px; color: #9ca3af; margin-bottom: 8px; }
+.bm-alert { border-radius: 6px; padding: 10px 13px; font-size: 12px; display: flex; align-items: flex-start; gap: 8px; margin-top: 6px; }
+.bm-alert-new   { background: #fff7ed; border: 1px solid #fed7aa; color: #92400e; }
+.bm-alert-revised { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.bm-alert strong { font-weight: 700; display: block; margin-bottom: 3px; }
+.bm-alert a { color: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.bm-alert-actions { display: flex; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
+.bm-btn { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 4px; cursor: pointer; border: none; }
+.bm-btn-primary { background: #cc0000; color: #fff; }
+.bm-btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.bm-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.bm-bookmarked-date { font-size: 10px; color: #bbb; }
+</style>
+</head>
+<body>
+
+<!-- ── Topbar ── -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo-wrap">
+      <div class="logo-ring">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="17" stroke="#cc0000" stroke-width="2"/>
+          <text x="18" y="23" text-anchor="middle" font-size="13" font-weight="900" fill="#cc0000" font-family="Arial,sans-serif">UL</text>
+        </svg>
+      </div>
+      <span class="logo-solutions">Solutions</span>
+    </div>
+    <div class="brand-sep"></div>
+    <span class="brand-ri">Regulatory Intelligence</span>
+  </div>
+  <nav>
+    <a href="#">Dashboard</a>
+    <a href="#" class="active">News</a>
+    <a href="#">Revision History</a>
+  </nav>
+  <div class="nav-right">
+    <div class="user-pill">
+      <div class="user-avatar-sm">I</div>
+      Internal Employee...
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="icon-btn">?</div>
+    <div class="icon-btn" onclick="showProto(3, document.querySelectorAll('.pn-btn')[2])">
+      🔔<span class="notif-dot"></span>
+    </div>
+    <div class="avatar">SL</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 1 – NEWS DETAIL (ACTIVE, LATEST)
+══════════════════════════════════════════════════════════ -->
+<div id="view1" class="view active">
+
+  <!-- Header -->
+  <div class="news-header">
+    <div class="news-id-row">
+      NEWS ID: 14426
+      <span class="ver-selector" onclick="">Version 1.1 (Latest) ▾</span>
+      <span class="badge b-revised">↺ Revised since your last view</span>
+    </div>
+    <div class="news-title-row">
+      <div class="news-title">Portugal ANACOM Launched a Public Consultation on the Draft Organizational Guidelines for Implementing Artificial Intelligence Literacy</div>
+      <div class="header-actions">
+        <div class="btn-bookmark" title="Bookmark">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v12l-5-3-5 3v-12z" stroke="#555" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </div>
+        <button class="btn btn-outline">Share</button>
+        <button class="btn btn-outline">Print</button>
+      </div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-item"><span class="ml">Added:</span><span class="mv">2026-05-19</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Effective:</span><span class="mv">No data</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Published:</span><span class="mv">2026-05-11</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Mandatory:</span><span class="mv">No data</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item highlight"><span class="ml">Consultation closing:</span><span class="mv">2026-06-01 ↑</span></div>
+      <a class="comments-link"><span class="comments-count">0</span> Comments</a>
+    </div>
+  </div>
+
+
+  <div class="body-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <div style="margin-bottom:12px;">
+        <div class="sb-label">Version history</div>
+        <div class="v-list">
+          <div class="v-row">
+            <div class="v-dot" style="background:#166534;"></div>
+            <span class="v-lbl cur">News ID 14426 · v1.1 — Current</span>
+            <span class="v-date">May 15, 2026</span>
+          </div>
+          <div class="v-row" onclick="showProto(2,document.querySelectorAll('.pn-btn')[1])">
+            <div class="v-dot" style="border:2px solid #d1d5db;background:#fff;"></div>
+            <span class="v-lbl">News ID 14426 · v1.0</span>
+            <span class="v-date">May 1, 2026</span>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Markets:</div><span class="sb-chip">🇵🇹 Portugal</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Regulatory Category:</div><span class="sb-chip">Artificial Intelligence</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Product categories:</div><span class="sb-chip">AV/ITE/ICT</span><span class="sb-chip">Bluetooth</span><span class="sb-chip">Cellular</span><span class="sb-chip block">Electrical and Electronic Equipment (EEE) — Cybersecurity Requirements</span><span class="sb-chip">Short Range Devices</span><span class="sb-chip">WLAN 2.4GHz</span><span class="sb-chip">WLAN 5GHz</span><span class="sb-chip">WLAN 6GHz</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Region:</div><span class="sb-chip blue">Europe</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">News level:</div><span class="badge b-draft" style="font-size:12px;padding:4px 12px;">○ Draft</span></div>
+      <hr>
+      <div><div class="sb-label">Issuer:</div><span class="sb-chip block">National Communications Authority (ANACOM)</span></div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <!-- What changed banner -->
+      <div class="wc-banner">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span class="wc-title">Updated to v1.1 on 2026-05-15 from v1.0 —</span>
+        <div class="wc-chips">
+          <span class="wc-chip meta" onclick="v1jump('section-meta')">Consultation closing date</span>
+          <span class="wc-chip" onclick="v1jump('section-summary')">Summary</span>
+          <span class="wc-chip" onclick="v1jump('section-summary-details')">Summary Details</span>
+          <span class="wc-chip" onclick="v1jump('section-technical')">Impact to Technical Requirement</span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-bar" id="v1-tabs">
+        <button class="tab-btn active" onclick="v1tab('content',this)">News</button>
+        <button class="tab-btn" onclick="v1tab('prev',this)">History &amp; Changes <span class="tab-count">2</span></button>
+        <button class="tab-btn" onclick="v1tab('rel',this)">Related Articles <span class="tab-count">3</span></button>
+      </div>
+
+      <!-- Full Content -->
+      <div id="v1-content" class="tab-panel active">
+        <div class="content-section" id="section-summary">
+          <div class="sec-heading">Summary <span class="updated-tag">Revised</span></div>
+          <div class="sec-body">
+            <p>On May 11, 2026, National Communications Authority (ANACOM) initiated a public consultation regarding its proposed organizational guidelines for the implementation of Artificial Intelligence (AI) literacy. The guideline targets both AI providers and deployers who are responsible for ensuring the proper use and understanding of AI systems.</p>
+            <p>Comments may be sent by <strong>June 1, 2026</strong>, in writing and in Portuguese, by email to <a>literaciaIA@anacom.pt</a>. Organizations are encouraged to provide detailed feedback on the implementation framework, particularly on the risk and criticality assessment methodology.</p>
+          </div>
+        </div>
+        <div class="content-section" id="section-announcements">
+          <div class="sec-heading">Announcements</div>
+          <div class="sec-body">
+            <a class="announce-link">https://www.anacom.pt/render.jsp?contentId=1839581</a>
+            <a class="announce-link">https://www.anacom.pt/render.jsp?contentId=1839541</a>
+            <a class="announce-link">https://www.anacom.pt/render.jsp?contentId=1839530</a>
+          </div>
+        </div>
+        <div class="content-section" id="section-summary-details">
+          <div class="sec-heading">Summary Details <span class="updated-tag">Revised</span></div>
+          <div class="sec-body">
+            <p>The guideline establishes a structured framework to help organizations comply with <a>Article 4 of the EU AI Regulation</a>. The AI Literacy Program steps are as follows:</p>
+            <ul>
+              <li><strong>Internal decision and enforcement order:</strong> Management formally approves the program and assigns responsibility.</li>
+              <li><strong>Inventory of AI systems:</strong> List all AI tools used, including third-party and "shadow AI."</li>
+              <li><strong>Internal risk and criticality ratings:</strong> Assess each system's risk based on impact, data use and autonomy.</li>
+              <li><strong>Mapping of Profiles and Responsibilities:</strong> Define who uses, manages, supervises, and decides on AI outputs.</li>
+              <li><strong>Defining objectives and minimum literacy levels:</strong> Set required AI knowledge levels per role and risk.</li>
+              <li><strong>Internal rules of use and limits:</strong> Establish clear rules on allowed, restricted, and prohibited AI use.</li>
+              <li><strong>Training plan:</strong> Provide ongoing, role-based training on AI use, risks, and validation.</li>
+              <li><strong>Hiring and management of third parties:</strong> Ensure vendors and partners comply with AI rules.</li>
+              <li><strong>Incident management:</strong> Define processes for reporting, logging, and resolving AI-related incidents.</li>
+              <li><strong>Continuous monitoring and improvement:</strong> Regularly audit the program and update it based on new risks.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="content-section" id="section-affected">
+          <div class="sec-heading">Affected Product Details</div>
+          <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-value">The draft guidelines apply to all public and private organizations that develop, supply or use AI systems, covering both providers and deployers under <a>Article 4 of Regulation (EU) 2024/1689</a>.</div></div></div>
+        </div>
+        <div class="content-section" id="section-conformity">
+          <div class="sec-heading">Impact to Conformity Assessment Process</div>
+          <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-label">Impact</div><div class="ib-value na">N/A</div></div></div>
+        </div>
+        <div class="content-section" id="section-marking">
+          <div class="sec-heading">Impact to Marking Requirement</div>
+          <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-label">Impact</div><div class="ib-value na">N/A</div></div></div>
+        </div>
+        <div class="content-section" id="section-technical">
+          <div class="sec-heading">Impact to Technical Requirement <span class="updated-tag">Revised</span></div>
+          <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-label">Impact</div><div class="ib-value">Organizations deploying high-risk AI systems as defined under Annex III of Regulation (EU) 2024/1689 must ensure their technical documentation includes evidence of staff AI literacy compliance.</div></div></div>
+        </div>
+      </div>
+
+      <!-- Compare -->
+      <!-- History & Changes (combined) -->
+      <div id="v1-prev" class="tab-panel">
+        <div class="prev-wrap">
+          <!-- v1.1 current -->
+          <div class="prev-entry">
+            <div class="prev-spine"><div class="prev-dot" style="background:#166534;"></div><div class="prev-line"></div></div>
+            <div style="flex:1;">
+              <div class="prev-meta-row"><span class="badge b-ver">v1.1</span><span class="badge b-latest">Current</span></div>
+              <div class="prev-title">Updated May 15, 2026 — major revision</div>
+              <div class="prev-dates">Consultation closing extended, 2 new program steps, technical requirement added</div>
+              <div class="prev-chips">
+                <span class="prev-chip m">Consultation closing: May 28 → Jun 1</span>
+                <span class="prev-chip m">Summary Details: steps 9 &amp; 10 added</span>
+                <span class="prev-chip m">Impact to Technical: N/A → new requirement</span>
+              </div>
+              <div style="margin-top:10px;padding:9px 12px;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;font-size:11px;color:#6b7280;">
+                <span style="font-weight:700;color:#374151;">Minor revision · May 18, 2026</span> — Contact email corrected:
+                <span style="text-decoration:line-through;color:#991b1b;background:#fee2e2;padding:0 3px;border-radius:2px;">ia-literacy@anacom.pt</span>
+                → <span style="color:#166534;background:#dcfce7;padding:0 3px;border-radius:2px;font-weight:500;">literaciaIA@anacom.pt</span>
+              </div>
+            </div>
+          </div>
+          <!-- v1.0 -->
+          <div class="prev-entry">
+            <div class="prev-spine"><div class="prev-dot" style="border:2px solid #d1d5db;background:#fff;"></div></div>
+            <div style="flex:1;">
+              <div class="prev-meta-row"><span class="badge b-ver">v1.0</span></div>
+              <div class="prev-title">Original publication · May 1, 2026</div>
+              <div class="prev-dates">Consultation closing: 2026-05-28 · 8 AI Literacy steps · Impact to Technical: N/A</div>
+              <div class="prev-chips"><span class="prev-chip">Original version</span></div>
+              <button class="btn btn-outline" style="margin-top:8px;font-size:11px;padding:4px 11px;" onclick="showProto(2,document.querySelectorAll('.pn-btn')[1])">View v1.0</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:2px solid #e5e7eb;margin:0 28px;"></div>
+
+        <!-- Compare section -->
+        <div class="cmp-wrap">
+          <div class="cmp-controls">
+            <label>Compare</label>
+            <select><option>v1.0 — 2026-05-01</option><option>v1.1 — 2026-05-15 (Current)</option></select>
+            <label>with</label>
+            <select><option selected>v1.1 — 2026-05-15 (Current)</option><option>v1.0 — 2026-05-01</option></select>
+          </div>
+          <div class="cmp-sub-label">Metadata fields</div>
+          <table class="cmp-table">
+            <thead><tr><th style="width:155px;">Field</th><th class="ho">v1.0 · 2026-05-01</th><th class="hn">v1.1 · 2026-05-15 (Current)</th></tr></thead>
+            <tbody>
+              <tr class="rs"><td class="tf">Status</td><td class="to">Draft <span class="rt s">Unchanged</span></td><td class="tn">Draft</td></tr>
+              <tr class="rs"><td class="tf">Published</td><td class="to">2026-05-01 <span class="rt s">Unchanged</span></td><td class="tn">2026-05-11</td></tr>
+              <tr class="rs"><td class="tf">Mandatory</td><td class="to">No data <span class="rt s">Unchanged</span></td><td class="tn">No data</td></tr>
+              <tr class="rc"><td class="tf">Consultation closing</td><td class="to">2026-05-28 <span class="rt c">Changed</span></td><td class="tn">2026-06-01</td></tr>
+              <tr class="rs"><td class="tf">Markets</td><td class="to">Portugal <span class="rt s">Unchanged</span></td><td class="tn">Portugal</td></tr>
+            </tbody>
+          </table>
+          <div class="cmp-sub-label" style="margin-top:24px;">Content sections</div>
+          <div class="diff-block">
+            <div class="diff-head"><span class="diff-head-name">Summary</span><span class="badge b-changed">Changed</span></div>
+            <div class="diff-body"><div class="diff-cols">
+              <div class="diff-col"><div class="dcl o">v1.0</div><div class="diff-text">…Comments may be sent by <del>May 28, 2026</del>, by email to <del>ia-literacy@anacom.pt</del>.</div></div>
+              <div class="diff-col"><div class="dcl n">v1.1 (Current)</div><div class="diff-text">…Comments may be sent by <ins>June 1, 2026</ins>, by email to <ins>literaciaIA@anacom.pt</ins>. Organizations are encouraged to provide detailed feedback on the implementation framework.</div></div>
+            </div></div>
+          </div>
+          <div class="diff-block"><div class="diff-head"><span class="diff-head-name">Announcements</span><span class="badge b-same">Unchanged</span></div><div class="diff-body"><div class="no-change">No changes between versions.</div></div></div>
+          <div class="diff-block">
+            <div class="diff-head"><span class="diff-head-name">Summary Details</span><span class="badge b-changed">Changed</span></div>
+            <div class="diff-body"><div class="diff-cols">
+              <div class="diff-col"><div class="dcl o">v1.0</div><div class="diff-text">AI Literacy Program steps 1–8. <del>Steps 9–10 not present.</del></div></div>
+              <div class="diff-col"><div class="dcl n">v1.1 (Current)</div><div class="diff-text">AI Literacy Program steps 1–8, plus <ins>Step 9 (Incident management) and Step 10 (Continuous monitoring and improvement) added.</ins></div></div>
+            </div></div>
+          </div>
+          <div class="diff-block"><div class="diff-head"><span class="diff-head-name">Affected Product Details</span><span class="badge b-same">Unchanged</span></div><div class="diff-body"><div class="no-change">No changes between versions.</div></div></div>
+          <div class="diff-block"><div class="diff-head"><span class="diff-head-name">Impact to Conformity Assessment</span><span class="badge b-same">Unchanged</span></div><div class="diff-body"><div class="no-change">N/A in both versions.</div></div></div>
+          <div class="diff-block"><div class="diff-head"><span class="diff-head-name">Impact to Marking Requirement</span><span class="badge b-same">Unchanged</span></div><div class="diff-body"><div class="no-change">N/A in both versions.</div></div></div>
+          <div class="diff-block">
+            <div class="diff-head"><span class="diff-head-name">Impact to Technical Requirement</span><span class="badge b-changed">Changed</span></div>
+            <div class="diff-body"><div class="diff-cols">
+              <div class="diff-col"><div class="dcl o">v1.0</div><div class="diff-text"><del>N/A</del></div></div>
+              <div class="diff-col"><div class="dcl n">v1.1 (Current)</div><div class="diff-text"><ins>Organizations deploying high-risk AI systems must ensure technical documentation includes evidence of staff AI literacy compliance.</ins></div></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Related Articles tab ══ -->
+      <div id="v1-rel" class="tab-panel">
+        <div class="rel-section">
+          <div class="rel-section-title">Related Articles</div>
+          <div class="rel-section-subtitle">Other news items editorially linked to this regulation.</div>
+          <div class="rel-grid">
+            <div class="rel-card">
+              <div class="rc-type">Related guidance</div>
+              <div class="rc-id">News ID: 14389</div>
+              <div class="rc-title">EU Commission FAQ on AI Act Article 4 Obligations for Deployers</div>
+              <div class="rc-meta">Published Apr 2026 · EU · Artificial Intelligence</div>
+            </div>
+            <div class="rel-card">
+              <div class="rc-type">Related regulation</div>
+              <div class="rc-id">News ID: 14102</div>
+              <div class="rc-title">Regulation (EU) 2024/1689 — AI Act Full Text Published</div>
+              <div class="rc-meta">Published Aug 2024 · EU · Artificial Intelligence</div>
+            </div>
+            <div class="rel-card locked">
+              <div class="rc-type" style="display:flex;align-items:center;gap:5px;">🔒 Out of subscription</div>
+              <div class="rc-id">News ID: 14501</div>
+              <div class="rc-redacted"></div>
+              <div class="rc-redacted" style="width:70%;"></div>
+              <div class="rc-meta" style="color:#d1d5db;">Spain · Artificial Intelligence · 2026</div>
+              <div class="rc-lock-note">Not available in your current subscription. <a style="color:#9ca3af;text-decoration:underline;cursor:pointer;">Upgrade to access</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /body-layout -->
+</div><!-- /view1 -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 2 – NEWS DETAIL (SAME ID, OLDER VERSION v1.0)
+══════════════════════════════════════════════════════════ -->
+<div id="view2" class="view">
+
+  <!-- Older version banner -->
+  <div class="older-banner">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>You are viewing <strong>v1.0</strong> — not the current version. Current is
+      <a onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">v1.1 (updated May 15, 2026)</a>.
+    </span>
+    <button class="ob-btn" onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">→ Go to current version</button>
+  </div>
+
+  <div class="news-header" style="background:#f7f7f7;">
+    <div class="news-id-row">
+      NEWS ID: 14426
+      <span class="ver-selector" style="opacity:0.75;">Version 1.0 ▾</span>
+    </div>
+    <div class="news-title-row">
+      <div class="news-title" style="color:#555;">Portugal ANACOM Launched a Public Consultation on the Draft Organizational Guidelines for Implementing Artificial Intelligence Literacy</div>
+      <div class="header-actions">
+        <div class="btn-bookmark" title="Bookmark">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v12l-5-3-5 3v-12z" stroke="#555" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </div>
+        <button class="btn btn-outline">Share</button>
+        <button class="btn btn-outline">Print</button>
+      </div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-item"><span class="ml">Added:</span><span class="mv">2026-05-01</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Effective:</span><span class="mv">No data</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Published:</span><span class="mv">2026-05-01</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Mandatory:</span><span class="mv">No data</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item"><span class="ml">Consultation closing:</span><span class="mv">2026-05-28</span></div>
+    </div>
+  </div>
+
+  <div class="body-layout">
+    <div class="sidebar">
+      <div style="margin-bottom:12px;">
+        <div class="sb-label">Version history</div>
+        <div class="v-list">
+          <div class="v-row" onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">
+            <div class="v-dot" style="background:#166534;"></div>
+            <span class="v-lbl cur">News ID 14426 · v1.1 — Current</span>
+            <span class="v-date">May 15, 2026</span>
+          </div>
+          <div class="v-row">
+            <div class="v-dot" style="border:2px solid #1d4ed8;background:#eff6ff;"></div>
+            <span class="v-lbl" style="color:#1d4ed8;font-weight:600;">News ID 14426 · v1.0 — You are here</span>
+            <span class="v-date">May 1, 2026</span>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Markets:</div><span class="sb-chip">🇵🇹 Portugal</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Regulatory Category:</div><span class="sb-chip">Artificial Intelligence</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Product categories:</div><span class="sb-chip">AV/ITE/ICT</span><span class="sb-chip">Bluetooth</span><span class="sb-chip">Cellular</span><span class="sb-chip block">Electrical and Electronic Equipment (EEE) — Cybersecurity Requirements</span><span class="sb-chip">Short Range Devices</span><span class="sb-chip">WLAN 2.4GHz</span><span class="sb-chip">WLAN 5GHz</span><span class="sb-chip">WLAN 6GHz</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">Region:</div><span class="sb-chip blue">Europe</span></div>
+      <hr>
+      <div style="margin-bottom:12px;"><div class="sb-label">News level:</div><span class="badge b-draft" style="font-size:12px;padding:4px 12px;">○ Draft</span></div>
+      <hr>
+      <div><div class="sb-label">Issuer:</div><span class="sb-chip block">National Communications Authority (ANACOM)</span></div>
+    </div>
+    <div class="main-content">
+      <div class="content-section" id="v2-section-summary">
+        <div class="sec-heading">Summary</div>
+        <div class="sec-body">
+          <p>On May 11, 2026, National Communications Authority (ANACOM) initiated a public consultation regarding its proposed organizational guidelines for the implementation of Artificial Intelligence (AI) literacy. The guideline targets both AI providers and deployers who are responsible for ensuring the proper use and understanding of AI systems.</p>
+          <p>Comments may be sent by <strong>May 28, 2026</strong>, in writing and in Portuguese, by email to ia-literacy@anacom.pt.</p>
+        </div>
+      </div>
+      <div class="content-section">
+        <div class="sec-heading">Announcements</div>
+        <div class="sec-body">
+          <a class="announce-link">https://www.anacom.pt/render.jsp?contentId=1839581</a>
+          <a class="announce-link">https://www.anacom.pt/render.jsp?contentId=1839541</a>
+          <a class="announce-link">https://www.anacom.pt/render.jsp?contentId=1839530</a>
+        </div>
+      </div>
+      <div class="content-section">
+        <div class="sec-heading">Summary Details</div>
+        <div class="sec-body">
+          <p>The guideline establishes a structured framework to help organizations comply with <a>Article 4 of the EU AI Regulation</a>. The AI Literacy Program steps are as follows:</p>
+          <ul>
+            <li><strong>Internal decision and enforcement order:</strong> Management formally approves the program and assigns responsibility.</li>
+            <li><strong>Inventory of AI systems:</strong> List all AI tools used, including third-party and "shadow AI."</li>
+            <li><strong>Internal risk and criticality ratings:</strong> Assess each system's risk based on impact, data use and autonomy.</li>
+            <li><strong>Mapping of Profiles and Responsibilities:</strong> Define who uses, manages, supervises, and decides on AI outputs.</li>
+            <li><strong>Defining objectives and minimum literacy levels:</strong> Set required AI knowledge levels per role and risk.</li>
+            <li><strong>Internal rules of use and limits:</strong> Establish clear rules on allowed, restricted, and prohibited AI use.</li>
+            <li><strong>Training plan:</strong> Provide ongoing, role-based training on AI use, risks, and validation.</li>
+            <li><strong>Hiring and management of third parties:</strong> Ensure vendors and partners comply with AI rules.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="content-section">
+        <div class="sec-heading">Affected Product Details</div>
+        <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-value">The draft guidelines apply to all public and private organizations that develop, supply or use AI systems, covering both providers and deployers under <a>Article 4 of Regulation (EU) 2024/1689</a>.</div></div></div>
+      </div>
+      <div class="content-section">
+        <div class="sec-heading">Impact to Conformity Assessment Process</div>
+        <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-label">Impact</div><div class="ib-value na">N/A</div></div></div>
+      </div>
+      <div class="content-section">
+        <div class="sec-heading">Impact to Marking Requirement</div>
+        <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-label">Impact</div><div class="ib-value na">N/A</div></div></div>
+      </div>
+      <div class="content-section">
+        <div class="sec-heading">Impact to Technical Requirement</div>
+        <div class="impact-block"><span class="ib-icon">⚠️</span><div><div class="ib-label">Impact</div><div class="ib-value na">N/A</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 3 – NOTIFICATIONS
+══════════════════════════════════════════════════════════ -->
+<div id="view3" class="view">
+  <div class="notif-page">
+    <div class="notif-header"><h2>Notifications</h2><span class="mark-all">Mark all as read</span></div>
+    <div class="notif-list">
+
+      <!-- Superseding alert -->
+      <div class="notif-item">
+        <div class="notif-unread-dot"></div>
+        <div class="notif-icon-wrap ni-superseded">🔁</div>
+        <div class="notif-body">
+          <div class="notif-type superseded">New version — supersedes article you follow</div>
+          <div class="notif-title">India NCCS Amendment 1.5 — Updated Designation Requirements for Telecom Security Labs</div>
+          <div class="notif-desc">
+            <strong>News ID 14489</strong> supersedes <a>News ID 14417 (Amendment 1.4)</a> which you follow.
+            This new version updates the cybersecurity standard reference and extends the mandatory date to 2026-08-01.
+          </div>
+        </div>
+        <div class="notif-time">2h ago</div>
+      </div>
+
+      <!-- Revised alert -->
+      <div class="notif-item">
+        <div class="notif-unread-dot"></div>
+        <div class="notif-icon-wrap ni-revised">↺</div>
+        <div class="notif-body">
+          <div class="notif-type revised">Revised — article you follow has been substantively updated</div>
+          <div class="notif-title">Portugal ANACOM — AI Literacy Guidelines Consultation (News ID 14426)</div>
+          <div class="notif-desc">
+            This article was substantively revised on <strong>May 15, 2026</strong>.
+            Consultation closing date updated (May 28 → June 1), two new AI Literacy Program steps added (Steps 9 &amp; 10), and Impact to Technical Requirement changed from N/A.
+            <a onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">View what changed →</a>
+          </div>
+        </div>
+        <div class="notif-time">1d ago</div>
+      </div>
+
+      <!-- Minor revision — suppressed -->
+      <div class="notif-muted">— Minor correction to News ID 14312 (spelling fix, May 3) was not sent as an alert —</div>
+
+      <!-- Another supersede -->
+      <div class="notif-item">
+        <div class="notif-icon-wrap ni-superseded" style="opacity:0.5;">🔁</div>
+        <div class="notif-body">
+          <div class="notif-type superseded">New version — supersedes article you follow</div>
+          <div class="notif-title">EU RED Delegated Act Cybersecurity — Updated FAQ Published (News ID 14503)</div>
+          <div class="notif-desc">
+            <strong>News ID 14503</strong> supersedes <a>News ID 14391</a> which you follow.
+          </div>
+        </div>
+        <div class="notif-time">3d ago</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 4 – BOOKMARKS
+══════════════════════════════════════════════════════════ -->
+<div id="view4" class="view">
+  <div class="bookmarks-page">
+    <div class="bm-header"><h2>Bookmarks</h2><span style="font-size:12px;color:#9ca3af;">4 bookmarks</span></div>
+    <div class="bm-list">
+
+      <!-- Bookmark: superseded article — "updated version available" -->
+      <div class="bm-item">
+        <div class="bm-icon">🔖</div>
+        <div class="bm-body">
+          <div class="bm-meta">
+            <span class="badge b-newsid">News ID: 14417</span>
+            <span class="badge b-superseded">Superseded</span>
+            <span class="badge b-ver">Version 1.4</span>
+          </div>
+          <div class="bm-title">India NCCS — Amendment 1.4: Designation Requirements for Telecom Security Labs</div>
+          <div class="bm-dates">Bookmarked: 2026-04-12 · Published: 2026-04-10 · India · Telecom Security</div>
+          <div class="bm-alert bm-alert-new">
+            <div>
+              <strong>📢 Updated version available</strong>
+              This article has been superseded by <a onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">News ID 14489 — Amendment 1.5 (published 2026-05-10)</a>.
+              Your bookmark still points to the older version.
+              <div class="bm-alert-actions">
+                <button class="bm-btn bm-btn-primary">Re-bookmark current version</button>
+                <button class="bm-btn bm-btn-outline" onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">View current version</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bm-right"><span class="bm-bookmarked-date">Bookmarked Apr 12</span></div>
+      </div>
+
+      <!-- Bookmark: revised article — "revised since you bookmarked" -->
+      <div class="bm-item">
+        <div class="bm-icon">🔖</div>
+        <div class="bm-body">
+          <div class="bm-meta">
+            <span class="badge b-newsid">News ID: 14426</span>
+            <span class="badge b-latest">Latest</span>
+            <span class="badge b-draft">Draft</span>
+          </div>
+          <div class="bm-title">Portugal ANACOM — AI Literacy Guidelines Consultation</div>
+          <div class="bm-dates">Bookmarked: 2026-05-02 · Published: 2026-05-11 · Portugal · AI</div>
+          <div class="bm-alert bm-alert-revised">
+            <div>
+              <strong>↺ Revised since you bookmarked</strong>
+              This article was substantively revised on <strong>May 15, 2026</strong> after you bookmarked it.
+              Consultation closing date updated, two new program steps added, Impact to Technical updated.
+              <div class="bm-alert-actions">
+                <button class="bm-btn bm-btn-primary" onclick="v1tab('rel',document.querySelectorAll('#v1-tabs .tab-btn')[2]);showProto(1,document.querySelectorAll('.pn-btn')[0])">View what changed</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bm-right"><span class="bm-bookmarked-date">Bookmarked May 2</span></div>
+      </div>
+
+      <!-- Normal bookmarks -->
+      <div class="bm-item">
+        <div class="bm-icon">🔖</div>
+        <div class="bm-body">
+          <div class="bm-meta"><span class="badge b-newsid">News ID: 14389</span><span class="badge b-final">Finalized</span></div>
+          <div class="bm-title">EU Commission FAQ on AI Act Article 4 Obligations for Deployers</div>
+          <div class="bm-dates">Bookmarked: 2026-04-28 · Published: 2026-04-22 · EU · Artificial Intelligence</div>
+        </div>
+        <div class="bm-right"><span class="bm-bookmarked-date">Bookmarked Apr 28</span></div>
+      </div>
+
+      <div class="bm-item">
+        <div class="bm-icon">🔖</div>
+        <div class="bm-body">
+          <div class="bm-meta"><span class="badge b-newsid">News ID: 14102</span><span class="badge b-final">Finalized</span></div>
+          <div class="bm-title">Regulation (EU) 2024/1689 — AI Act Full Text Published</div>
+          <div class="bm-dates">Bookmarked: 2026-01-10 · Published: 2024-08-01 · EU · Artificial Intelligence</div>
+        </div>
+        <div class="bm-right"><span class="bm-bookmarked-date">Bookmarked Jan 10</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW 5 – SEARCH RESULTS
+══════════════════════════════════════════════════════════ -->
+<div id="view5" class="view">
+  <div class="search-page">
+    <div class="search-toolbar">
+      <div class="search-title">Search results <span class="count">(12,794)</span></div>
+      <div class="search-input-wrap">
+        <input class="search-input" type="text" placeholder="Search All News" value="">
+        <button class="btn btn-primary">Search</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">FILTERING BY</span>
+      <div class="toggle-wrap">
+        <div class="toggle on" onclick="this.classList.toggle('on');this.nextElementSibling.textContent=this.classList.contains('on')?'Active articles only (default)':'Including superseded versions'"></div>
+        <span>Active articles only (default)</span>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:#9ca3af;">Sort by</span>
+        <select class="sort-select"><option>Recently added</option><option>Published date</option><option>Relevance</option></select>
+      </div>
+    </div>
+
+    <!-- Card 1: Revised badge -->
+    <div class="news-card">
+      <div class="nc-top">
+        <div class="nc-meta">
+          <span class="badge b-newsid" style="font-size:11px;">News ID: 14426</span>
+          <span class="badge b-draft">Draft</span>
+          <span class="badge b-latest">Latest</span>
+          <span class="badge b-revised">↺ Revised since last viewed</span>
+        </div>
+        <div class="nc-title" onclick="showProto(1,document.querySelectorAll('.pn-btn')[0])">Portugal ANACOM Launched a Public Consultation on the Draft Organizational Guidelines for Implementing Artificial Intelligence Literacy</div>
+        <div class="nc-body">On May 11, 2026, National Communications Authority (ANACOM) initiated a public consultation regarding its proposed organizational guidelines for the implementation of Artificial Intelligence (AI) literacy…</div>
+        <div class="nc-dates">
+          <span><span class="dl">Added:</span> 2026-05-19</span>
+          <span><span class="dl">Published:</span> 2026-05-11</span>
+          <span><span class="dl">Consultation closing:</span> 2026-06-01</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Latest (no revised) -->
+    <div class="news-card">
+      <div class="nc-top">
+        <div class="nc-meta">
+          <span class="badge b-newsid" style="font-size:11px;">News ID: 14489</span>
+          <span class="badge b-final">Finalized</span>
+          <span class="badge b-latest">Latest</span>
+        </div>
+        <div class="nc-title">India NCCS Amendment 1.5 — Updated Designation Requirements for Telecom Security Labs</div>
+        <div class="nc-body">On May 10, 2026, NCCS issued Amendment 1.5 introducing stricter cybersecurity assessment criteria and updated lab accreditation timelines…</div>
+        <div class="nc-dates">
+          <span><span class="dl">Added:</span> 2026-05-10</span>
+          <span><span class="dl">Mandatory:</span> 2026-08-01</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Finalized, no flags -->
+    <div class="news-card">
+      <div class="nc-top">
+        <div class="nc-meta">
+          <span class="badge b-newsid" style="font-size:11px;">News ID: 14391</span>
+          <span class="badge b-final">Finalized</span>
+        </div>
+        <div class="nc-title">EU Commission Published Updated Guidance on Radio Equipment Directive Cybersecurity Delegated Act</div>
+        <div class="nc-body">The European Commission published updated FAQ guidance clarifying implementation requirements under the RED cybersecurity delegated regulation…</div>
+        <div class="nc-dates">
+          <span><span class="dl">Added:</span> 2026-05-18</span>
+          <span><span class="dl">Mandatory:</span> 2026-08-01</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:#9ca3af;text-align:center;padding:18px 0;border-top:1px solid #f3f4f6;margin-top:4px;">
+      Showing active articles only. Toggle "Including superseded versions" above to show all versions.
+      &nbsp;·&nbsp; 1–20 of 12,794 &nbsp;·&nbsp; <a style="color:#cc0000;cursor:pointer;">Next page →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function showProto(n, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.pn-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view'+n).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+function v1tab(name, el) {
+  ['content','prev','rel'].forEach(t => {
+    document.getElementById('v1-'+t).classList.toggle('active', t===name);
+  });
+  document.querySelectorAll('#v1-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function v1jump(id) {
+  v1tab('content', document.querySelector('#v1-tabs .tab-btn'));
+  setTimeout(() => { const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 60);
+}
+</script>
+</body>
+</html>
